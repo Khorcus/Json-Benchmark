@@ -11,11 +11,15 @@ include_directories(${JsonCpp_INCLUDE_DIR})
 find_package(nlohmann_json REQUIRED)
 include_directories(${nlohmann_json_INCLUDE_DIR})
 
+find_package(benchmark REQUIRED)
+include_directories(${benchmark_INCLUDE_DIR})
+
 add_executable(${PROJECT_NAME} src/main.cpp)
 
 target_link_libraries(${PROJECT_NAME} ${Rapidjson_LIBRARY})
 target_link_libraries(${PROJECT_NAME} ${JsonCpp_LIBRARY})
 target_link_libraries(${PROJECT_NAME} ${nlohmann_json_LIBRARY})
+target_link_libraries(${PROJECT_NAME} benchmark::benchmark)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
