@@ -115,5 +115,4 @@ Temporary Items
 .apdisk
 
 .idea
-*-output.json
-data/citylots.json
+output-data
