@@ -11,21 +11,27 @@
 using std::ifstream;
 using std::ofstream;
 
-std::string test_filename_start = "../test-data/";
-std::string output_filename_start = "../output-data/";
 std::string filename_end = ".json";
 std::vector<rapidjson::Document> rapidjson_docs(10);
+std::vector<Json::Value> jsoncpp_values(10);
+std::vector<nlohmann::json> nlohmann_jsons(10);
 
 
-std::string i_to_size_str(int i) {
-    return std::to_string((i + 1) * 10);
+std::string i_to_test_filename(int i) {
+    std::string test_filename_start = "../test-data/";
+    return test_filename_start + std::to_string((i + 1) * 10) + filename_end;
+}
+
+std::string i_to_output_filename(int i) {
+    std::string output_filename_start = "../output-data/";
+    return output_filename_start + std::to_string((i + 1) * 10) + filename_end;
 }
 
 
 static void test_rapidjson_deserialization(benchmark::State &state) {
     int i = state.range(0);
     for (auto _ : state) {
-        ifstream ifs(test_filename_start + i_to_size_str(i) + filename_end);
+        ifstream ifs(i_to_test_filename(i));
         rapidjson::IStreamWrapper isw(ifs);
         rapidjson_docs[i].ParseStream(isw);
     }
@@ -34,10 +40,42 @@ static void test_rapidjson_deserialization(benchmark::State &state) {
 static void test_rapidjson_serialization(benchmark::State &state) {
     int i = state.range(0);
     for (auto _ : state) {
-        ofstream ofs(output_filename_start + i_to_size_str(i) + filename_end);
+        ofstream ofs(i_to_output_filename(i));
         rapidjson::OStreamWrapper osw(ofs);
         rapidjson::Writer<rapidjson::OStreamWrapper> writer_canada(osw);
         rapidjson_docs[i].Accept(writer_canada);
+    }
+}
+
+static void test_jsoncpp_deserialization(benchmark::State &state) {
+    int i = state.range(0);
+    for (auto _ : state) {
+        ifstream ifs(i_to_test_filename(i));
+        ifs >> jsoncpp_values[i];
+    }
+}
+
+static void test_jsoncpp_serialization(benchmark::State &state) {
+    int i = state.range(0);
+    for (auto _ : state) {
+        ofstream ofs(i_to_output_filename(i));
+        ofs << jsoncpp_values[i];
+    }
+}
+
+static void test_nlohmann_json_deserialization(benchmark::State &state) {
+    int i = state.range(0);
+    for (auto _ : state) {
+        ifstream ifs(i_to_test_filename(i));
+        ifs >> nlohmann_jsons[i];
+    }
+}
+
+static void test_nlohmann_json_serialization(benchmark::State &state) {
+    int i = state.range(0);
+    for (auto _ : state) {
+        ofstream ofs(i_to_output_filename(i));
+        ofs << nlohmann_jsons[i];
     }
 }
 
@@ -45,6 +83,14 @@ static void test_rapidjson_serialization(benchmark::State &state) {
 BENCHMARK(test_rapidjson_deserialization)->DenseRange(0, 9, 1);
 
 BENCHMARK(test_rapidjson_serialization)->DenseRange(0, 9, 1);
+
+BENCHMARK(test_jsoncpp_deserialization)->DenseRange(0, 9, 1);
+
+BENCHMARK(test_jsoncpp_serialization)->DenseRange(0, 9, 1);
+
+BENCHMARK(test_nlohmann_json_deserialization)->DenseRange(0, 9, 1);
+
+BENCHMARK(test_nlohmann_json_serialization)->DenseRange(0, 9, 1);
 
 
 BENCHMARK_MAIN();
