@@ -8,6 +8,6 @@ It was created by Alexander Khamitov for the subject "Modern technologies of pro
 
 ## Results
 
-![Deserialization](https://raw.githubusercontent.com/Khorcus/Json-Benchmark/master/plots/Deserialization.png?token=AIQMQKR3BULL3A3YP6OEZBC65N3LC)
+![Deserialization](/plots/Deserialization.png)
 
-![Serialization](https://raw.githubusercontent.com/Khorcus/Json-Benchmark/master/plots/Serialization.png?token=AIQMQKTWPRNLT7K55PMJAWS65N3NO)
+![Serialization](/plots/Serialization.png)
