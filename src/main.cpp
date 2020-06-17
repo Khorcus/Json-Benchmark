@@ -32,6 +32,7 @@ void rapidjson_deserialize(benchmark::State &state, int i, bool pause) {
         state.PauseTiming();
     }
     ifstream ifs(i_to_test_filename(i));
+    rapidjson::IStreamWrapper isw(ifs);
     if (!rapidjson_docs[i].IsNull()) {
         rapidjson_docs[i] = rapidjson::Document();
     }
@@ -39,7 +40,6 @@ void rapidjson_deserialize(benchmark::State &state, int i, bool pause) {
         state.ResumeTiming();
     }
 
-    rapidjson::IStreamWrapper isw(ifs);
     rapidjson_docs[i].ParseStream(isw);
 
     if (pause) {
@@ -56,13 +56,13 @@ void rapidjson_serialize(benchmark::State &state, int i, int pause) {
         state.PauseTiming();
     }
     ofstream ofs(i_to_output_filename(i));
+    rapidjson::OStreamWrapper osw(ofs);
+    rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
     if (pause) {
         state.ResumeTiming();
     }
 
-    rapidjson::OStreamWrapper osw(ofs);
-    rapidjson::Writer<rapidjson::OStreamWrapper> writer_canada(osw);
-    rapidjson_docs[i].Accept(writer_canada);
+    rapidjson_docs[i].Accept(writer);
 
     if (pause) {
         state.PauseTiming();
