@@ -33,6 +33,9 @@ static void test_rapidjson_deserialization(benchmark::State &state) {
     for (auto _ : state) {
         state.PauseTiming();
         ifstream ifs(i_to_test_filename(i));
+        if (!rapidjson_docs[i].IsNull()) {
+            rapidjson_docs[i] = rapidjson::Document();
+        }
         state.ResumeTiming();
 
         rapidjson::IStreamWrapper isw(ifs);
@@ -67,6 +70,9 @@ static void test_jsoncpp_deserialization(benchmark::State &state) {
     for (auto _ : state) {
         state.PauseTiming();
         ifstream ifs(i_to_test_filename(i));
+        if (!jsoncpp_values[i].isNull()) {
+            jsoncpp_values[i] = Json::Value();
+        }
         state.ResumeTiming();
 
         ifs >> jsoncpp_values[i];
@@ -98,6 +104,9 @@ static void test_nlohmann_json_deserialization(benchmark::State &state) {
     for (auto _ : state) {
         state.PauseTiming();
         ifstream ifs(i_to_test_filename(i));
+        if (!nlohmann_jsons[i].is_null()) {
+            nlohmann_jsons[i] = nlohmann::json();
+        }
         state.ResumeTiming();
 
         ifs >> nlohmann_jsons[i];
@@ -125,17 +134,17 @@ static void test_nlohmann_json_serialization(benchmark::State &state) {
 }
 
 
-BENCHMARK(test_rapidjson_deserialization)->DenseRange(0, 1, 1);
+BENCHMARK(test_rapidjson_deserialization)->DenseRange(0, 0, 1);
 
-BENCHMARK(test_rapidjson_serialization)->DenseRange(0, 1, 1);
+BENCHMARK(test_rapidjson_serialization)->DenseRange(0, 0, 1);
 
-BENCHMARK(test_jsoncpp_deserialization)->DenseRange(0, 1, 1);
+BENCHMARK(test_jsoncpp_deserialization)->DenseRange(0, 0, 1);
 
-BENCHMARK(test_jsoncpp_serialization)->DenseRange(0, 1, 1);
+BENCHMARK(test_jsoncpp_serialization)->DenseRange(0, 0, 1);
 
-BENCHMARK(test_nlohmann_json_deserialization)->DenseRange(0, 1, 1);
+BENCHMARK(test_nlohmann_json_deserialization)->DenseRange(0, 0, 1);
 
-BENCHMARK(test_nlohmann_json_serialization)->DenseRange(0, 1, 1);
+BENCHMARK(test_nlohmann_json_serialization)->DenseRange(0, 0, 1);
 
 
 BENCHMARK_MAIN();
