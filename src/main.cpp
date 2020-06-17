@@ -27,40 +27,112 @@ std::string i_to_output_filename(int i) {
     return output_filename_start + std::to_string((i + 1) * 10) + filename_end;
 }
 
+void rapidjson_deserialize(benchmark::State &state, int i, bool pause) {
+    if (pause) {
+        state.PauseTiming();
+    }
+    ifstream ifs(i_to_test_filename(i));
+    if (!rapidjson_docs[i].IsNull()) {
+        rapidjson_docs[i] = rapidjson::Document();
+    }
+    if (pause) {
+        state.ResumeTiming();
+    }
+
+    rapidjson::IStreamWrapper isw(ifs);
+    rapidjson_docs[i].ParseStream(isw);
+
+    if (pause) {
+        state.PauseTiming();
+    }
+    ifs.close();
+    if (pause) {
+        state.ResumeTiming();
+    }
+}
+
+void rapidjson_serialize(benchmark::State &state, int i, int pause) {
+    if (pause) {
+        state.PauseTiming();
+    }
+    ofstream ofs(i_to_output_filename(i));
+    if (pause) {
+        state.ResumeTiming();
+    }
+
+    rapidjson::OStreamWrapper osw(ofs);
+    rapidjson::Writer<rapidjson::OStreamWrapper> writer_canada(osw);
+    rapidjson_docs[i].Accept(writer_canada);
+
+    if (pause) {
+        state.PauseTiming();
+    }
+    std::flush(ofs);
+    ofs.close();
+    if (pause) {
+        state.ResumeTiming();
+    }
+}
 
 static void test_rapidjson_deserialization(benchmark::State &state) {
     int i = state.range(0);
     for (auto _ : state) {
-        state.PauseTiming();
-        ifstream ifs(i_to_test_filename(i));
-        if (!rapidjson_docs[i].IsNull()) {
-            rapidjson_docs[i] = rapidjson::Document();
-        }
-        state.ResumeTiming();
-
-        rapidjson::IStreamWrapper isw(ifs);
-        rapidjson_docs[i].ParseStream(isw);
-
-        state.PauseTiming();
-        ifs.close();
-        state.ResumeTiming();
+        rapidjson_deserialize(state, i, true);
     }
 }
 
 static void test_rapidjson_serialization(benchmark::State &state) {
     int i = state.range(0);
+
+    if (rapidjson_docs[i].IsNull()) {
+        rapidjson_deserialize(state, i, false);
+    }
+
     for (auto _ : state) {
+        rapidjson_serialize(state, i, true);
+    }
+}
+
+void jsoncpp_deserialize(benchmark::State &state, int i, bool pause) {
+    if (pause) {
         state.PauseTiming();
-        ofstream ofs(i_to_output_filename(i));
+    }
+    ifstream ifs(i_to_test_filename(i));
+    if (!jsoncpp_values[i].isNull()) {
+        jsoncpp_values[i] = Json::Value();
+    }
+    if (pause) {
         state.ResumeTiming();
+    }
 
-        rapidjson::OStreamWrapper osw(ofs);
-        rapidjson::Writer<rapidjson::OStreamWrapper> writer_canada(osw);
-        rapidjson_docs[i].Accept(writer_canada);
+    ifs >> jsoncpp_values[i];
 
+    if (pause) {
         state.PauseTiming();
-        std::flush(ofs);
-        ofs.close();
+    }
+    ifs.close();
+    if (pause) {
+        state.ResumeTiming();
+    }
+}
+
+void jsoncpp_serialize(benchmark::State &state, int i, bool pause) {
+    if (pause) {
+        state.PauseTiming();
+    }
+    ofstream ofs(i_to_output_filename(i));
+    if (pause) {
+        state.ResumeTiming();
+    }
+
+    ofs << jsoncpp_values[i];
+
+    if (pause) {
+        state.PauseTiming();
+    }
+    std::flush(ofs);
+    ofs.close();
+    if (pause) {
         state.ResumeTiming();
     }
 }
@@ -68,33 +140,62 @@ static void test_rapidjson_serialization(benchmark::State &state) {
 static void test_jsoncpp_deserialization(benchmark::State &state) {
     int i = state.range(0);
     for (auto _ : state) {
-        state.PauseTiming();
-        ifstream ifs(i_to_test_filename(i));
-        if (!jsoncpp_values[i].isNull()) {
-            jsoncpp_values[i] = Json::Value();
-        }
-        state.ResumeTiming();
-
-        ifs >> jsoncpp_values[i];
-
-        state.PauseTiming();
-        ifs.close();
-        state.ResumeTiming();
+        jsoncpp_deserialize(state, i, true);
     }
 }
 
 static void test_jsoncpp_serialization(benchmark::State &state) {
     int i = state.range(0);
+
+    if (jsoncpp_values[i].isNull()) {
+        jsoncpp_deserialize(state, i, false);
+    }
+
     for (auto _ : state) {
+        jsoncpp_serialize(state, i, true);
+    }
+}
+
+void nlohmann_json_deserialize(benchmark::State &state, int i, bool pause) {
+    if (pause) {
         state.PauseTiming();
-        ofstream ofs(i_to_output_filename(i));
+    }
+    ifstream ifs(i_to_test_filename(i));
+    if (!nlohmann_jsons[i].is_null()) {
+        nlohmann_jsons[i] = nlohmann::json();
+    }
+    if (pause) {
         state.ResumeTiming();
+    }
 
-        ofs << jsoncpp_values[i];
+    ifs >> nlohmann_jsons[i];
 
+    if (pause) {
         state.PauseTiming();
-        std::flush(ofs);
-        ofs.close();
+    }
+    ifs.close();
+    if (pause) {
+        state.ResumeTiming();
+    }
+}
+
+void nlohmann_json_serialize(benchmark::State &state, int i, bool pause) {
+    if (pause) {
+        state.PauseTiming();
+    }
+    ofstream ofs(i_to_output_filename(i));
+    if (pause) {
+        state.ResumeTiming();
+    }
+
+    ofs << nlohmann_jsons[i];
+
+    if (pause) {
+        state.PauseTiming();
+    }
+    std::flush(ofs);
+    ofs.close();
+    if (pause) {
         state.ResumeTiming();
     }
 }
@@ -102,49 +203,34 @@ static void test_jsoncpp_serialization(benchmark::State &state) {
 static void test_nlohmann_json_deserialization(benchmark::State &state) {
     int i = state.range(0);
     for (auto _ : state) {
-        state.PauseTiming();
-        ifstream ifs(i_to_test_filename(i));
-        if (!nlohmann_jsons[i].is_null()) {
-            nlohmann_jsons[i] = nlohmann::json();
-        }
-        state.ResumeTiming();
-
-        ifs >> nlohmann_jsons[i];
-
-        state.PauseTiming();
-        ifs.close();
-        state.ResumeTiming();
+        nlohmann_json_deserialize(state, i, true);
     }
 }
 
 static void test_nlohmann_json_serialization(benchmark::State &state) {
     int i = state.range(0);
+
+    if (nlohmann_jsons[i].is_null()) {
+        nlohmann_json_deserialize(state, i, false);
+    }
+
     for (auto _ : state) {
-        state.PauseTiming();
-        ofstream ofs(i_to_output_filename(i));
-        state.ResumeTiming();
-
-        ofs << nlohmann_jsons[i];
-
-        state.PauseTiming();
-        std::flush(ofs);
-        ofs.close();
-        state.ResumeTiming();
+        nlohmann_json_serialize(state, i, true);
     }
 }
 
 
-BENCHMARK(test_rapidjson_deserialization)->DenseRange(0, 0, 1);
+BENCHMARK(test_rapidjson_deserialization)->DenseRange(0, 9, 1);
 
-BENCHMARK(test_rapidjson_serialization)->DenseRange(0, 0, 1);
+BENCHMARK(test_rapidjson_serialization)->DenseRange(0, 9, 1);
 
-BENCHMARK(test_jsoncpp_deserialization)->DenseRange(0, 0, 1);
+BENCHMARK(test_jsoncpp_deserialization)->DenseRange(0, 9, 1);
 
-BENCHMARK(test_jsoncpp_serialization)->DenseRange(0, 0, 1);
+BENCHMARK(test_jsoncpp_serialization)->DenseRange(0, 9, 1);
 
-BENCHMARK(test_nlohmann_json_deserialization)->DenseRange(0, 0, 1);
+BENCHMARK(test_nlohmann_json_deserialization)->DenseRange(0, 9, 1);
 
-BENCHMARK(test_nlohmann_json_serialization)->DenseRange(0, 0, 1);
+BENCHMARK(test_nlohmann_json_serialization)->DenseRange(0, 9, 1);
 
 
 BENCHMARK_MAIN();
